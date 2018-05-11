@@ -59,7 +59,7 @@ type CreateConfig struct {
 	Version         uint // example: 10
 }
 
-//TODO ..
+// TODO ..
 type DiskConfig struct {
 	DiskSize            int64 `mapstructure:"disk_size"`
 	DiskThinProvisioned bool  `mapstructure:"disk_thin_provisioned"`
