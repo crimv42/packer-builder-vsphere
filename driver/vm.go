@@ -60,8 +60,8 @@ type CreateConfig struct {
 
 //TODO ..
 type DiskConfig struct {
-	DiskSize            int64
-	DiskThinProvisioned bool
+	DiskSize            int64 `mapstructure:"disk_size"`
+	DiskThinProvisioned bool  `mapstructure:"disk_thin_provisioned"`
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
