@@ -3,11 +3,12 @@ package driver
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	"time"
-	"strings"
 )
 
 type VirtualMachine struct {
@@ -41,7 +42,8 @@ type CreateConfig struct {
 	DiskThinProvisioned bool
 	DiskControllerType  string // example: "scsi", "pvscsi"
 	DiskSize            int64
-
+	//Added for multiDisk
+	MultiDiskConfig     []DiskConfig
 	Annotation    string
 	Name          string
 	Folder        string
@@ -55,6 +57,13 @@ type CreateConfig struct {
 	USBController bool
 	Version       uint // example: 10
 }
+
+//TODO .. 
+type DiskConfig struct {
+	DiskSize            int64  
+	DiskThinProvisioned bool   
+}
+
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
 	return &VirtualMachine{
@@ -114,10 +123,17 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 	if err != nil {
 		return nil, err
 	}
+	//TODO:
 	devices, err = addDisk(d, devices, config)
 	if err != nil {
 		return nil, err
 	}
+
+	devices, err = addDisks(d, devices, config)
+	if err != nil {
+		return nill, err
+	}
+
 	devices, err = addNetwork(d, devices, config)
 	if err != nil {
 		return nil, err
@@ -406,6 +422,7 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 	return "", fmt.Errorf("cannot find '%s'", vmxName)
 }
 
+//TODO: write a interating version of this bitch
 func addDisk(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
@@ -430,6 +447,37 @@ func addDisk(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) 
 
 	devices.AssignController(disk, controller)
 	devices = append(devices, disk)
+
+	return devices, nil
+}
+
+func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+	device, err := devices.CreateSCSIController(config.DiskControllerType)
+	if err != nil {
+		return nil, err
+	}
+	devices = append(devices, device)
+	controller, err := devices.FindDiskController(devices.Name(device))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dc := config.MultiDiskConfig {
+		disk := &types.VirtualDisk{
+			VirtualDevice: types.VirtualDevice{
+				Key: devices.NewKey(),
+				Backing: &types.VirtualDiskFlatVer2BackingInfo{
+					DiskMode:        string(types.VirtualDiskModePersistent),
+					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
+				},
+			},
+			CapacityInKB: dc.DiskSize * 1024,
+		}
+	
+		devices.AssignController(disk, controller)
+		devices = append(devices, disk)
+	}
+	
 
 	return devices, nil
 }
