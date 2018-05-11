@@ -44,27 +44,26 @@ type CreateConfig struct {
 	DiskControllerType  string // example: "scsi", "pvscsi"
 	DiskSize            int64
 	//Added for multiDisk
-	MultiDiskConfig     []DiskConfig
-	Annotation    string
-	Name          string
-	Folder        string
-	Cluster       string
-	Host          string
-	ResourcePool  string
-	Datastore     string
-	GuestOS       string // example: otherGuest
-	Network       string // "" for default network
-	NetworkCard   string // example: vmxnet3
-	USBController bool
-	Version       uint // example: 10
+	MultiDiskConfig []DiskConfig
+	Annotation      string
+	Name            string
+	Folder          string
+	Cluster         string
+	Host            string
+	ResourcePool    string
+	Datastore       string
+	GuestOS         string // example: otherGuest
+	Network         string // "" for default network
+	NetworkCard     string // example: vmxnet3
+	USBController   bool
+	Version         uint // example: 10
 }
 
-//TODO .. 
+//TODO ..
 type DiskConfig struct {
-	DiskSize            int64  
-	DiskThinProvisioned bool   
+	DiskSize            int64
+	DiskThinProvisioned bool
 }
-
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
 	return &VirtualMachine{
@@ -470,7 +469,7 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 		return nil, err
 	}
 
-	for _, dc := config.MultiDiskConfig {
+	for _, dc := range config.MultiDiskConfig {
 		disk := &types.VirtualDisk{
 			VirtualDevice: types.VirtualDevice{
 				Key: devices.NewKey(),
@@ -481,11 +480,10 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 			},
 			CapacityInKB: dc.DiskSize * 1024,
 		}
-	
+
 		devices.AssignController(disk, controller)
 		devices = append(devices, disk)
 	}
-	
 
 	return devices, nil
 }
