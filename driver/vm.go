@@ -131,7 +131,7 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 
 	devices, err = addDisks(d, devices, config)
 	if err != nil {
-		return nill, err
+		return nil, err
 	}
 
 	devices, err = addNetwork(d, devices, config)
