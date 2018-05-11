@@ -14,20 +14,18 @@ type CreateConfig struct {
 	Version     uint   `mapstructure:"vm_version"`
 	GuestOSType string `mapstructure:"guest_os_type"`
 
-	DiskControllerType  string `mapstructure:"disk_controller_type"`
-	DiskSize            int64  `mapstructure:"disk_size"`
-	DiskThinProvisioned bool   `mapstructure:"disk_thin_provisioned"`
-	MultiDiskConfig     []DiskConfig 
-	Network       string `mapstructure:"network"`
-	NetworkCard   string `mapstructure:"network_card"`
-	USBController bool   `mapstructure:"usb_controller"`
+	DiskControllerType  string       `mapstructure:"disk_controller_type"`
+	DiskSize            int64        `mapstructure:"disk_size"`
+	DiskThinProvisioned bool         `mapstructure:"disk_thin_provisioned"`
+	MultiDiskConfig     []DiskConfig `mapstructure:"multi_disk_config"`
+	Network             string       `mapstructure:"network"`
+	NetworkCard         string       `mapstructure:"network_card"`
+	USBController       bool         `mapstructure:"usb_controller"`
 }
 
-type MultiDiskConfig []DiskConfig `mapstructure:"multi_disk_config"`
-
 type DiskConfig struct {
-	DiskSize            int64  `mapstructure:"disk_size"`
-	DiskThinProvisioned bool   `mapstructure:"disk_thin_provisioned"`
+	DiskSize            int64 `mapstructure:"disk_size"`
+	DiskThinProvisioned bool  `mapstructure:"disk_thin_provisioned"`
 }
 
 func (c *CreateConfig) Prepare() []error {
@@ -58,7 +56,7 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 		DiskThinProvisioned: s.Config.DiskThinProvisioned,
 		DiskControllerType:  s.Config.DiskControllerType,
 		DiskSize:            s.Config.DiskSize,
-		MultiDiskConfig:	 s.Config.MultiDiskConfig,
+		MultiDiskConfig:     s.Config.MultiDiskConfig,
 		Name:                s.Location.VMName,
 		Folder:              s.Location.Folder,
 		Cluster:             s.Location.Cluster,
