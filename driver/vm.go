@@ -521,12 +521,14 @@ func (vm *VirtualMachine) AddCdrom(isoPath string) error {
 	if err != nil {
 		return err
 	}
-	sata, err := vm.FindSATAController()
+	// sata, err := vm.FindSATAController()
+	ide, err := devices.FindIDEController("")
 	if err != nil {
 		return err
 	}
 
-	cdrom, err := vm.CreateCdrom(sata)
+	// cdrom, err := vm.CreateCdrom(sata)
+	cdrom, err := devices.CreateCdrom(ide)
 	if err != nil {
 		return err
 	}
