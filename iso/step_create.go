@@ -23,6 +23,11 @@ type CreateConfig struct {
 	USBController       bool                `mapstructure:"usb_controller"`
 }
 
+// type DiskConfig struct {
+// 	DiskSize            int64 `mapstructure:"disk_size"`
+// 	DiskThinProvisioned bool  `mapstructure:"disk_thin_provisioned"`
+// }
+
 func (c *CreateConfig) Prepare() []error {
 	var errs []error
 
