@@ -58,10 +58,10 @@ type CreateConfig struct {
 	Version         uint // example: 10
 }
 
-//TODO ..
 type DiskConfig struct {
 	DiskSize            int64 `mapstructure:"disk_size"`
 	DiskThinProvisioned bool  `mapstructure:"disk_thin_provisioned"`
+	DiskEagerlyScrub    bool  `mapstructure:"disk_eagerly_scrub"`
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
@@ -122,6 +122,7 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	//TODO:
 	devices, err = addDisk(d, devices, config)
 	if err != nil {
@@ -421,7 +422,6 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 	return "", fmt.Errorf("cannot find '%s'", vmxName)
 }
 
-//TODO: write a interating version of this bitch
 func addDisk(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
@@ -468,6 +468,7 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 				Backing: &types.VirtualDiskFlatVer2BackingInfo{
 					DiskMode:        string(types.VirtualDiskModePersistent),
 					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
+					EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,
