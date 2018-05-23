@@ -14,6 +14,7 @@ type CreateConfig struct {
 	Version     uint   `mapstructure:"vm_version"`
 	GuestOSType string `mapstructure:"guest_os_type"`
 
+	DiskControllerType  string              `mapstructure:"disk_controller_type"`
 	MultiDiskConfig     []driver.DiskConfig `mapstructure:"multi_disk_config"`
 	Network             string              `mapstructure:"network"`
 	NetworkCard         string              `mapstructure:"network_card"`
@@ -41,6 +42,7 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 
 	ui.Say("Creating VM...")
 	vm, err := d.CreateVM(&driver.CreateConfig{
+		DiskControllerType:  s.Config.DiskControllerType,
 		MultiDiskConfig:     s.Config.MultiDiskConfig,
 		Name:                s.Location.VMName,
 		Folder:              s.Location.Folder,

@@ -40,6 +40,7 @@ type HardwareConfig struct {
 }
 
 type CreateConfig struct {
+	DiskControllerType  string // example: "scsi", "pvscsi"
 	MultiDiskConfig []DiskConfig
 	Annotation      string
 	Name            string
