@@ -14,26 +14,14 @@ type CreateConfig struct {
 	Version     uint   `mapstructure:"vm_version"`
 	GuestOSType string `mapstructure:"guest_os_type"`
 
-	DiskControllerType  string              `mapstructure:"disk_controller_type"`
-	DiskSize            int64               `mapstructure:"disk_size"`
-	DiskThinProvisioned bool                `mapstructure:"disk_thin_provisioned"`
 	MultiDiskConfig     []driver.DiskConfig `mapstructure:"multi_disk_config"`
 	Network             string              `mapstructure:"network"`
 	NetworkCard         string              `mapstructure:"network_card"`
 	USBController       bool                `mapstructure:"usb_controller"`
 }
 
-// type DiskConfig struct {
-// 	DiskSize            int64 `mapstructure:"disk_size"`
-// 	DiskThinProvisioned bool  `mapstructure:"disk_thin_provisioned"`
-// }
-
 func (c *CreateConfig) Prepare() []error {
 	var errs []error
-
-	if c.DiskSize == 0 {
-		errs = append(errs, fmt.Errorf("'disk_size' is required"))
-	}
 
 	if c.GuestOSType == "" {
 		c.GuestOSType = "otherGuest"
@@ -53,9 +41,6 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 
 	ui.Say("Creating VM...")
 	vm, err := d.CreateVM(&driver.CreateConfig{
-		DiskThinProvisioned: s.Config.DiskThinProvisioned,
-		DiskControllerType:  s.Config.DiskControllerType,
-		DiskSize:            s.Config.DiskSize,
 		MultiDiskConfig:     s.Config.MultiDiskConfig,
 		Name:                s.Location.VMName,
 		Folder:              s.Location.Folder,

@@ -40,10 +40,6 @@ type HardwareConfig struct {
 }
 
 type CreateConfig struct {
-	DiskThinProvisioned bool
-	DiskControllerType  string // example: "scsi", "pvscsi"
-	DiskSize            int64
-	//Added for multiDisk
 	MultiDiskConfig []DiskConfig
 	Annotation      string
 	Name            string
@@ -120,12 +116,6 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 	devices := object.VirtualDeviceList{}
 
 	devices, err = addIDE(devices)
-	if err != nil {
-		return nil, err
-	}
-
-	//TODO:
-	devices, err = addDisk(d, devices, config)
 	if err != nil {
 		return nil, err
 	}
@@ -428,34 +418,6 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 		}
 	}
 	return "", fmt.Errorf("cannot find '%s'", vmxName)
-}
-
-func addDisk(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
-	device, err := devices.CreateSCSIController(config.DiskControllerType)
-	if err != nil {
-		return nil, err
-	}
-	devices = append(devices, device)
-	controller, err := devices.FindDiskController(devices.Name(device))
-	if err != nil {
-		return nil, err
-	}
-
-	disk := &types.VirtualDisk{
-		VirtualDevice: types.VirtualDevice{
-			Key: devices.NewKey(),
-			Backing: &types.VirtualDiskFlatVer2BackingInfo{
-				DiskMode:        string(types.VirtualDiskModePersistent),
-				ThinProvisioned: types.NewBool(config.DiskThinProvisioned),
-			},
-		},
-		CapacityInKB: config.DiskSize * 1024,
-	}
-
-	devices.AssignController(disk, controller)
-	devices = append(devices, disk)
-
-	return devices, nil
 }
 
 func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
