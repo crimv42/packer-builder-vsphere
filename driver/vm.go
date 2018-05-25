@@ -40,26 +40,27 @@ type HardwareConfig struct {
 }
 
 type CreateConfig struct {
-	DiskControllerType  string // example: "scsi", "pvscsi"
-	MultiDiskConfig []DiskConfig
-	Annotation      string
-	Name            string
-	Folder          string
-	Cluster         string
-	Host            string
-	ResourcePool    string
-	Datastore       string
-	GuestOS         string // example: otherGuest
-	Network         string // "" for default network
-	NetworkCard     string // example: vmxnet3
-	USBController   bool
-	Version         uint // example: 10
+	Storage            []DiskConfig
+	Annotation         string
+	Cluster            string
+	Datastore          string
+	DiskControllerType string // example: "scsi", "pvscsi"
+	Folder             string
+	GlobalDiskType     string // example: "thick_eager", "thick_lazy", "thin"
+	GuestOS            string // example: otherGuest
+	Host               string
+	Name               string
+	Network            string // "" for default network
+	NetworkCard        string // example: vmxnet3
+	ResourcePool       string
+	USBController      bool
+	Version            uint   // example: 10
 }
 
 type DiskConfig struct {
-	DiskSize            int64 `mapstructure:"disk_size"`
-	DiskThinProvisioned bool  `mapstructure:"disk_thin_provisioned"`
-	DiskEagerlyScrub    bool  `mapstructure:"disk_eagerly_scrub"`
+	DiskName string `mapstructure:"disk_name"`
+	DiskSize int64  `mapstructure:"disk_size"`
+	DiskType string `mapstructure:"disk_type"`
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
@@ -432,14 +433,14 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 		return nil, err
 	}
 
-	for _, dc := range config.MultiDiskConfig {
+	for _, dc := range config.Storage {
 		disk := &types.VirtualDisk{
 			VirtualDevice: types.VirtualDevice{
 				Key: devices.NewKey(),
 				Backing: &types.VirtualDiskFlatVer2BackingInfo{
 					DiskMode:        string(types.VirtualDiskModePersistent),
-					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
-					EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
+					// ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
+					// EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,

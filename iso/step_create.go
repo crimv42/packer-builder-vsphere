@@ -14,11 +14,12 @@ type CreateConfig struct {
 	Version     uint   `mapstructure:"vm_version"`
 	GuestOSType string `mapstructure:"guest_os_type"`
 
-	DiskControllerType  string              `mapstructure:"disk_controller_type"`
-	MultiDiskConfig     []driver.DiskConfig `mapstructure:"multi_disk_config"`
-	Network             string              `mapstructure:"network"`
-	NetworkCard         string              `mapstructure:"network_card"`
-	USBController       bool                `mapstructure:"usb_controller"`
+	DiskControllerType string              `mapstructure:"disk_controller_type"`
+	GlobalDiskType     string              `mapstructure:"disk_type"`
+	Storage            []driver.DiskConfig `mapstructure:"storage"`
+	Network            string              `mapstructure:"network"`
+	NetworkCard        string              `mapstructure:"network_card"`
+	USBController      bool                `mapstructure:"usb_controller"`
 }
 
 func (c *CreateConfig) Prepare() []error {
@@ -42,17 +43,18 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 
 	ui.Say("Creating VM...")
 	vm, err := d.CreateVM(&driver.CreateConfig{
-		DiskControllerType:  s.Config.DiskControllerType,
-		MultiDiskConfig:     s.Config.MultiDiskConfig,
-		Name:                s.Location.VMName,
-		Folder:              s.Location.Folder,
 		Cluster:             s.Location.Cluster,
-		Host:                s.Location.Host,
-		ResourcePool:        s.Location.ResourcePool,
 		Datastore:           s.Location.Datastore,
+		Folder:              s.Location.Folder,
+		Host:                s.Location.Host,
+		Name:                s.Location.VMName,
+		ResourcePool:        s.Location.ResourcePool,
+		DiskControllerType:  s.Config.DiskControllerType,
+		GlobalDiskType:      s.Config.GlobalDiskType,
 		GuestOS:             s.Config.GuestOSType,
 		Network:             s.Config.Network,
 		NetworkCard:         s.Config.NetworkCard,
+		Storage:             s.Config.Storage,
 		USBController:       s.Config.USBController,
 		Version:             s.Config.Version,
 	})
