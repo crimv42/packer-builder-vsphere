@@ -441,13 +441,13 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 		}
 
 		if dc.DiskType == "thin" {
-			dc.DiskThinProvisioned = true,
+			dc.DiskThinProvisioned = true
 			dc.DiskEagerlyScrub    = false
 		} else if dc.DiskType == "thick_eager" {
-			dc.DiskThinProvisioned = false,
+			dc.DiskThinProvisioned = false
 			dc.DiskEagerlyScrub    = true
 		} else if dc.DiskType == "thick_lazy" {
-			dc.DiskThinProvisioned = false,
+			dc.DiskThinProvisioned = false
 			dc.DiskEagerlyScrub    = false
 		}
 
