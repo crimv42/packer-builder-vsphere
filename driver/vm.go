@@ -434,13 +434,30 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 	}
 
 	for _, dc := range config.Storage {
+
+		// if no disk specific disk type is provided, use the global disk type
+		if dc.DiskType == "" && config.GlobalDiskType != "" {
+			dc.DiskType = config.GlobalDiskType
+		}
+
+		if dc.DiskType == "thin" {
+			dc.DiskThinProvisioned = true,
+			dc.DiskEagerlyScrub    = false
+		} else if dc.DiskType == "thick_eager" {
+			dc.DiskThinProvisioned = false,
+			dc.DiskEagerlyScrub    = true
+		} else if dc.DiskType == "thick_lazy" {
+			dc.DiskThinProvisioned = false,
+			dc.DiskEagerlyScrub    = false
+		}
+
 		disk := &types.VirtualDisk{
 			VirtualDevice: types.VirtualDevice{
 				Key: devices.NewKey(),
 				Backing: &types.VirtualDiskFlatVer2BackingInfo{
 					DiskMode:        string(types.VirtualDiskModePersistent),
-					// ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
-					// EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
+					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
+					EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,
