@@ -58,9 +58,11 @@ type CreateConfig struct {
 }
 
 type DiskConfig struct {
-	DiskName string `mapstructure:"disk_name"`
-	DiskSize int64  `mapstructure:"disk_size"`
-	DiskType string `mapstructure:"disk_type"`
+	DiskName            string  `mapstructure:"disk_name"`
+	DiskSize            int64   `mapstructure:"disk_size"`
+	DiskType            string  `mapstructure:"disk_type"`
+	DiskEagerlyScrub    boolean
+	DiskThinProvisioned boolean
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
@@ -441,14 +443,14 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 		}
 
 		if dc.DiskType == "thin" {
+			dc.DiskEagerlyScrub    = false
 			dc.DiskThinProvisioned = true
-			dc.DiskEagerlyScrub    = false
 		} else if dc.DiskType == "thick_eager" {
-			dc.DiskThinProvisioned = false
 			dc.DiskEagerlyScrub    = true
-		} else if dc.DiskType == "thick_lazy" {
 			dc.DiskThinProvisioned = false
+		} else if dc.DiskType == "thick_lazy" {
 			dc.DiskEagerlyScrub    = false
+			dc.DiskThinProvisioned = false
 		}
 
 		disk := &types.VirtualDisk{
