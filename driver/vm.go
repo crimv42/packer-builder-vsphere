@@ -429,6 +429,7 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 }
 
 func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+	ui := state.Get("ui").(packer.Ui)
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
 		return nil, err
@@ -477,12 +478,12 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 		devices.AssignController(disk, controller)
 		devices = append(devices, disk)
 
-		ui.say("debug: dumping disk device info")
-		ui.say(spew.Dump(disk))
+		ui.Say("debug: dumping disk device info")
+		ui.Say(spew.Dump(disk))
 	}
 
-	ui.say("debug: dumping all device info")
-	ui.say(spew.Dump(devices))
+	ui.Say("debug: dumping all device info")
+	ui.Say(spew.Dump(devices))
 
 	return devices, nil
 }
