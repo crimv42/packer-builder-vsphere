@@ -11,7 +11,6 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
-  "github.com/hashicorp/packer/packer"
 	"github.com/davecgh/go-spew/spew"
 )
 
