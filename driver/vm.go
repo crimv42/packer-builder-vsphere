@@ -437,8 +437,6 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 	}
 
 	for _, dc := range config.Storage {
-
-		// if no disk specific disk type is provided, use the global disk type
 		if dc.DiskType == "" && config.GlobalDiskType != "" {
 			dc.DiskType = config.GlobalDiskType
 		}
@@ -450,6 +448,9 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 			dc.DiskEagerlyScrub    = true
 			dc.DiskThinProvisioned = false
 		} else if dc.DiskType == "thick_lazy" {
+			dc.DiskEagerlyScrub    = false
+			dc.DiskThinProvisioned = false
+		} else {
 			dc.DiskEagerlyScrub    = false
 			dc.DiskThinProvisioned = false
 		}
