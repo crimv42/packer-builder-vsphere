@@ -437,6 +437,10 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 	}
 
 	for _, dc := range config.Storage {
+		if dc.DiskName != "" {
+			dc.DiskName += ".vmdk"
+		}
+
 		if dc.DiskType == "" && config.GlobalDiskType != "" {
 			dc.DiskType = config.GlobalDiskType
 		}
@@ -462,6 +466,9 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 					DiskMode:        string(types.VirtualDiskModePersistent),
 					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
 					EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
+					VirtualDeviceFileBackingInfo: types.VirtualDeviceFileBackingInfo{
+						FileName: string(dc.Diskname),
+					},
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,
