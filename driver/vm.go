@@ -10,6 +10,8 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 type VirtualMachine struct {
@@ -469,13 +471,13 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,
-			name: dc.DiskName,
 		}
 
 		devices.AssignController(disk, controller)
 		devices = append(devices, disk)
 	}
 
+	spew.Dump(devices)
 	return devices, nil
 }
 
