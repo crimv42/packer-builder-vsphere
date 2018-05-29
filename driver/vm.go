@@ -476,16 +476,10 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 
 		devices.AssignController(disk, controller)
 		devices = append(devices, disk)
-
-		packer.Ui.Say("debug: dumping disk device info")
-		foo := spew.Dump(disk)
-		packer.Ui.Say(foo)
+		spew.Dump(disk)
 	}
 
-	packer.Ui.Say("debug: dumping all device info")
-	bar := spew.Dump(disk)
-	packer.Ui.Say(bar)
-
+	spew.Dump(devices)
 	return devices, nil
 }
 
