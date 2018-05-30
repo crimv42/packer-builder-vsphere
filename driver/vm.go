@@ -13,8 +13,6 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
   "github.com/hashicorp/packer/packer"
-  "github.com/jetbrains-infra/packer-builder-vsphere/common"
-  "github.com/jetbrains-infra/packer-builder-vsphere/driver"
 )
 
 type VirtualMachine struct {
@@ -431,9 +429,6 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 }
 
 func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
-	ui := state.Get("ui").(packer.Ui)
-  ui.Say("debug: at func addDisks")
-
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
 		return nil, err
@@ -481,10 +476,8 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 
 		devices.AssignController(disk, controller)
 		devices = append(devices, disk)
-		spew.Dump(disk)
 	}
 
-	spew.Dump(devices)
 	return devices, nil
 }
 
