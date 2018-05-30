@@ -464,11 +464,12 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 				Key: devices.NewKey(),
 				Backing: &types.VirtualDiskFlatVer2BackingInfo{
 					DiskMode:        string(types.VirtualDiskModePersistent),
-					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
 					EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
-				},
-				Backing: &types.VirtualDeviceFileBackingInfo{
-					FileName:        string(dc.DiskName),
+					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
+					VirtualDeviceFileBackingInfo: types.VirtualDeviceFileBackingInfo{
+						FileName:  string(dc.DiskName),
+						Datastore: &datastore,
+					},
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,
