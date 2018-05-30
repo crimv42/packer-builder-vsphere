@@ -436,7 +436,7 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 		return nil, err
 	}
 
-	datastore, err := template.driver.FindDatastore(config.Datastore, config.Host)
+	datastore, err := FindDatastore(config.Datastore, config.Host)
 	if err != nil {
 		return nil, err
 	}
