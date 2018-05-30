@@ -425,7 +425,7 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 	return "", fmt.Errorf("cannot find '%s'", vmxName)
 }
 
-func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig, datastore) (object.VirtualDeviceList, error) {
+func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig, ds datastore) (object.VirtualDeviceList, error) {
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
 		return nil, err
@@ -468,7 +468,7 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig,
 					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
 					VirtualDeviceFileBackingInfo: types.VirtualDeviceFileBackingInfo{
 						FileName:  string(dc.DiskName),
-						Datastore: &datastore,
+						Datastore: &ds,
 					},
 				},
 			},
