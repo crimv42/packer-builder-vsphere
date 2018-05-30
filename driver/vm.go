@@ -125,7 +125,7 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 		return nil, err
 	}
 
-	devices, err = addDisks(d, devices, config)
+	devices, err = addDisks(d, devices, config, datastore)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 	return "", fmt.Errorf("cannot find '%s'", vmxName)
 }
 
-func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig, datastore) (object.VirtualDeviceList, error) {
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
 		return nil, err
