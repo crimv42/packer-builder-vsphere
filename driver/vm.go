@@ -10,9 +10,6 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-
-	"github.com/davecgh/go-spew/spew"
-  "github.com/hashicorp/packer/packer"
 )
 
 type VirtualMachine struct {
