@@ -472,7 +472,7 @@ func addDisks(d *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
 					VirtualDeviceFileBackingInfo: types.VirtualDeviceFileBackingInfo{
 						FileName:  string(dc.DiskName),
-						Datastore: &datastore,
+						Datastore: datastore,
 					},
 				},
 			},
