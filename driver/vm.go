@@ -11,6 +11,8 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
+  "github.com/hashicorp/packer/helper/multistep"
+  "github.com/hashicorp/packer/packer"
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -428,6 +430,9 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 }
 
 func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+	ui := state.Get("ui").(packer.Ui)
+  ui.Say("debug: at func addDisks")
+
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
 		return nil, err
