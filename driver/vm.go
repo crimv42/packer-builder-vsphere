@@ -125,7 +125,7 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 		return nil, err
 	}
 
-	devices, err = addDisks(d, devices, config, datastore)
+	devices, err = addDisks(d, devices, config)
 	if err != nil {
 		return nil, err
 	}
@@ -425,13 +425,18 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 	return "", fmt.Errorf("cannot find '%s'", vmxName)
 }
 
-func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig, ds datastore) (object.VirtualDeviceList, error) {
+func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
 		return nil, err
 	}
 	devices = append(devices, device)
 	controller, err := devices.FindDiskController(devices.Name(device))
+	if err != nil {
+		return nil, err
+	}
+
+	datastore, err := template.driver.FindDatastore(config.Datastore, config.Host)
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +473,7 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig,
 					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
 					VirtualDeviceFileBackingInfo: types.VirtualDeviceFileBackingInfo{
 						FileName:  string(dc.DiskName),
-						Datastore: &ds,
+						Datastore: &datastore,
 					},
 				},
 			},
