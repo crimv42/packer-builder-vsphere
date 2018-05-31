@@ -455,6 +455,7 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 			dc.DiskEagerlyScrub    = false
 			dc.DiskThinProvisioned = false
 		} else {
+			// default disk type: Thick provisioned lazy zeroed
 			dc.DiskEagerlyScrub    = false
 			dc.DiskThinProvisioned = false
 		}
@@ -466,12 +467,10 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 					DiskMode:        string(types.VirtualDiskModePersistent),
 					EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
 					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
-					VirtualDeviceFileBackingInfo: types.VirtualDeviceFileBackingInfo{
-						FileName:  string(dc.DiskName),
-					},
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,
+			name: string(dc.DiskName),
 		}
 
 		devices.AssignController(disk, controller)
