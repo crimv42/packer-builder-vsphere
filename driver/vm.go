@@ -470,7 +470,7 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 				},
 			},
 			CapacityInKB: dc.DiskSize * 1024,
-			name: string(dc.DiskName),
+			fileName: string(dc.DiskName),
 		}
 
 		devices.AssignController(disk, controller)
