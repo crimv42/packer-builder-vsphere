@@ -40,7 +40,7 @@ type HardwareConfig struct {
 }
 
 type CreateConfig struct {
-	Networks           []NetworkList // "" for default network
+	Networks           []string
 	Storage            []DiskConfig
 	Annotation         string
 	Cluster            string
@@ -64,10 +64,6 @@ type DiskConfig struct {
 
 	DiskEagerlyScrub    bool
 	DiskThinProvisioned bool
-}
-
-type NetworkList struct {
-	Network string
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
@@ -484,8 +480,8 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 }
 
 func addNetworks(d *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
-  for _, Network := range config.Networks {
-		network, err := d.finder.NetworkOrDefault(d.ctx, Network)
+  for _, networkName := range config.Networks {
+		network, err := d.finder.NetworkOrDefault(d.ctx, networkName)
 		if err != nil {
 			return nil, err
 		}
