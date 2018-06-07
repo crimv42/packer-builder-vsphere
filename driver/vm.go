@@ -40,6 +40,7 @@ type HardwareConfig struct {
 }
 
 type CreateConfig struct {
+	Networks           []NetworkList // "" for default network
 	Storage            []DiskConfig
 	Annotation         string
 	Cluster            string
@@ -50,7 +51,6 @@ type CreateConfig struct {
 	GuestOS            string // example: otherGuest
 	Host               string
 	Name               string
-	Network            string // "" for default network
 	NetworkCard        string // example: vmxnet3
 	ResourcePool       string
 	USBController      bool
@@ -64,6 +64,9 @@ type DiskConfig struct {
 
 	DiskEagerlyScrub    bool
 	DiskThinProvisioned bool
+}
+
+type NetworkList struct {
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
@@ -130,7 +133,7 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 		return nil, err
 	}
 
-	devices, err = addNetwork(d, devices, config)
+	devices, err = addNetworks(d, devices, config)
 	if err != nil {
 		return nil, err
 	}
@@ -479,23 +482,27 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 	return devices, nil
 }
 
-func addNetwork(d *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
-	network, err := d.finder.NetworkOrDefault(d.ctx, config.Network)
-	if err != nil {
-		return nil, err
+func addNetworks(d *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+  for _, Network := range config.Networks {
+		network, err := d.finder.NetworkOrDefault(d.ctx, Network)
+		if err != nil {
+			return nil, err
+		}
+
+		backing, err := network.EthernetCardBackingInfo(d.ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		device, err := object.EthernetCardTypes().CreateEthernetCard(config.NetworkCard, backing)
+		if err != nil {
+			return nil, err
+		}
+
+		devices = append(devices, device)
 	}
 
-	backing, err := network.EthernetCardBackingInfo(d.ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	device, err := object.EthernetCardTypes().CreateEthernetCard(config.NetworkCard, backing)
-	if err != nil {
-		return nil, err
-	}
-
-	return append(devices, device), nil
+	return devices, nil
 }
 
 func addIDE(devices object.VirtualDeviceList) (object.VirtualDeviceList, error) {
