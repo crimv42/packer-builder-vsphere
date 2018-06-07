@@ -67,6 +67,7 @@ type DiskConfig struct {
 }
 
 type NetworkList struct {
+	Network string
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
