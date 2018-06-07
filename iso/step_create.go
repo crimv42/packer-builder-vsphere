@@ -14,12 +14,12 @@ type CreateConfig struct {
 	Version     uint   `mapstructure:"vm_version"`
 	GuestOSType string `mapstructure:"guest_os_type"`
 
-	DiskControllerType string               `mapstructure:"disk_controller_type"`
-	GlobalDiskType     string               `mapstructure:"disk_type"`
-	NetworkCard        string               `mapstructure:"network_card"`
-	Networks           []driver.NetworkList `mapstructure:"networks"`
-	Storage            []driver.DiskConfig  `mapstructure:"storage"`
-	USBController      bool                 `mapstructure:"usb_controller"`
+	DiskControllerType string              `mapstructure:"disk_controller_type"`
+	GlobalDiskType     string              `mapstructure:"disk_type"`
+	NetworkCard        string              `mapstructure:"network_card"`
+	Networks           []string            `mapstructure:"networks"`
+	Storage            []driver.DiskConfig `mapstructure:"storage"`
+	USBController      bool                `mapstructure:"usb_controller"`
 }
 
 func (c *CreateConfig) Prepare() []error {
