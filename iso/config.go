@@ -3,15 +3,15 @@ package iso
 import (
 	packerCommon "github.com/hashicorp/packer/common"
 	"github.com/hashicorp/packer/helper/communicator"
+	"github.com/hashicorp/packer/helper/config"
 	"github.com/hashicorp/packer/packer"
 	"github.com/hashicorp/packer/template/interpolate"
 	"github.com/jetbrains-infra/packer-builder-vsphere/common"
-	"github.com/hashicorp/packer/helper/config"
 )
 
 type Config struct {
 	packerCommon.PackerConfig `mapstructure:",squash"`
-        packerCommon.HTTPConfig   `mapstructure:",squash"`
+	packerCommon.HTTPConfig   `mapstructure:",squash"`
 
 	common.ConnectConfig      `mapstructure:",squash"`
 	CreateConfig              `mapstructure:",squash"`
