@@ -13,5 +13,5 @@ GOOS=linux   go build -o bin/packer-builder-vsphere-iso.linux ./cmd/iso
 #GOOS=windows go build -o bin/packer-builder-vsphere-iso.exe   ./cmd/iso
 
 #GOOS=darwin  go build -o bin/packer-builder-vsphere-clone.macos ./cmd/clone
-#GOOS=linux   go build -o bin/packer-builder-vsphere-clone.linux ./cmd/clone
+GOOS=linux   go build -o bin/packer-builder-vsphere-clone.linux ./cmd/clone
 #GOOS=windows go build -o bin/packer-builder-vsphere-clone.exe   ./cmd/clone
