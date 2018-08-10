@@ -192,7 +192,7 @@ func (vm *VirtualMachine) Devices() (object.VirtualDeviceList, error) {
 	return vmInfo.Config.Hardware.Device, nil
 }
 
-func (d *Driver, template *VirtualMachine) Clone(ctx context.Context, config *CloneConfig) (*VirtualMachine, error) {
+func (template *VirtualMachine) Clone(ctx context.Context, config *CloneConfig) (*VirtualMachine, error) {
 	folder, err := template.driver.FindFolder(config.Folder)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func (d *Driver, template *VirtualMachine) Clone(ctx context.Context, config *Cl
 	cloneSpec.PowerOn = false
 
   devices := object.VirtualDeviceList{}
-  devices, err = appendNetworks(d, devices, config)
+  devices, err = appendNetworks(template, devices, config)
   if err != nil {
     return nil, err
   }
@@ -510,9 +510,9 @@ func addNetworks(d *Driver, devices object.VirtualDeviceList, config *CreateConf
 	return devices, nil
 }
 
-func appendNetworks(d *Driver, devices object.VirtualDeviceList, config *CloneConfig) (object.VirtualDeviceList, error) {
+func appendNetworks(template *VirtualMachine, devices object.VirtualDeviceList, config *CloneConfig) (object.VirtualDeviceList, error) {
   for _, networkName := range config.Networks {
-		network, err := d.finder.NetworkOrDefault(d.ctx, networkName)
+		network, err := template.finder.NetworkOrDefault(template.ctx, networkName)
 		if err != nil {
 			return nil, err
 		}
