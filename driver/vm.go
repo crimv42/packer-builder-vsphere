@@ -18,12 +18,14 @@ type VirtualMachine struct {
 }
 
 type CloneConfig struct {
-	Name         string
-	Folder       string
+	Networks     []string
 	Cluster      string
-	Host         string
-	ResourcePool string
 	Datastore    string
+	Folder       string
+	Host         string
+	Name         string
+	NetworkCard  string // example: vmxnet3
+	ResourcePool string
 	LinkedClone  bool
 }
 
@@ -215,6 +217,13 @@ func (template *VirtualMachine) Clone(ctx context.Context, config *CloneConfig) 
 	var cloneSpec types.VirtualMachineCloneSpec
 	cloneSpec.Location = relocateSpec
 	cloneSpec.PowerOn = false
+
+  devices := object.VirtualDeviceList{}
+
+  devices, err = appendNetworks(template, devices, config)
+  if err != nil {
+    return nil, err
+  }
 
 	if config.LinkedClone == true {
 		cloneSpec.Location.DiskMoveType = "createNewChildDiskBacking"
@@ -480,6 +489,29 @@ func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig)
 }
 
 func addNetworks(d *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+  for _, networkName := range config.Networks {
+		network, err := d.finder.NetworkOrDefault(d.ctx, networkName)
+		if err != nil {
+			return nil, err
+		}
+
+		backing, err := network.EthernetCardBackingInfo(d.ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		device, err := object.EthernetCardTypes().CreateEthernetCard(config.NetworkCard, backing)
+		if err != nil {
+			return nil, err
+		}
+
+		devices = append(devices, device)
+	}
+
+	return devices, nil
+}
+
+func appendNetworks(d *Driver, devices object.VirtualDeviceList, config *CloneConfig) (object.VirtualDeviceList, error) {
   for _, networkName := range config.Networks {
 		network, err := d.finder.NetworkOrDefault(d.ctx, networkName)
 		if err != nil {

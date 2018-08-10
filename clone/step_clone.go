@@ -11,9 +11,11 @@ import (
 )
 
 type CloneConfig struct {
-	DiskSize    int64  `mapstructure:"disk_size"`
-	LinkedClone bool   `mapstructure:"linked_clone"`
-	Template    string `mapstructure:"template"`
+	DiskSize    int64    `mapstructure:"disk_size"`
+	LinkedClone bool     `mapstructure:"linked_clone"`
+	NetworkCard string   `mapstructure:"network_card"`
+	Networks    []string `mapstructure:"networks"`
+	Template    string   `mapstructure:"template"`
 }
 
 func (c *CloneConfig) Prepare() []error {
@@ -55,6 +57,8 @@ func (s *StepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Name:         s.Location.VMName,
 		ResourcePool: s.Location.ResourcePool,
 		LinkedClone:  s.Config.LinkedClone,
+    Networks:     s.Config.Networks,
+    NetworkCard:  s.Config.NetworkCard,
 	})
 	if err != nil {
 		state.Put("error", err)
