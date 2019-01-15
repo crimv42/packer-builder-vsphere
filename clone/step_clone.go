@@ -3,6 +3,7 @@ package clone
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
 	"github.com/jetbrains-infra/packer-builder-vsphere/common"
@@ -10,9 +11,11 @@ import (
 )
 
 type CloneConfig struct {
-	Template    string `mapstructure:"template"`
-	DiskSize    int64  `mapstructure:"disk_size"`
-	LinkedClone bool   `mapstructure:"linked_clone"`
+	DiskSize    int64    `mapstructure:"disk_size"`
+	LinkedClone bool     `mapstructure:"linked_clone"`
+	NetworkCard string   `mapstructure:"network_card"`
+	Networks    []string `mapstructure:"networks"`
+	Template    string   `mapstructure:"template"`
 	Notes       string `mapstructure:"notes"`
 }
 
@@ -61,14 +64,16 @@ func (s *StepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 	}
 
 	vm, err := template.Clone(ctx, &driver.CloneConfig{
-		Name:         s.Location.VMName,
-		Folder:       s.Location.Folder,
 		Cluster:      s.Location.Cluster,
-		Host:         s.Location.Host,
-		ResourcePool: s.Location.ResourcePool,
 		Datastore:    s.Location.Datastore,
+		Folder:       s.Location.Folder,
+		Host:         s.Location.Host,
+		Name:         s.Location.VMName,
+		ResourcePool: s.Location.ResourcePool,
 		LinkedClone:  s.Config.LinkedClone,
 		Annotation:   s.Config.Notes,
+        Networks:     s.Config.Networks,
+        NetworkCard:  s.Config.NetworkCard,
 	})
 	if err != nil {
 		state.Put("error", err)

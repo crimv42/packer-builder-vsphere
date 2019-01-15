@@ -3,6 +3,8 @@ package iso
 import (
 	"context"
 	"fmt"
+
+	//packerCommon "github.com/hashicorp/packer/common"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
 	"github.com/jetbrains-infra/packer-builder-vsphere/common"
@@ -14,23 +16,20 @@ type CreateConfig struct {
 	GuestOSType string `mapstructure:"guest_os_type"`
 	Firmware    string `mapstructure:"firmware"`
 
-	DiskControllerType  string `mapstructure:"disk_controller_type"`
-	DiskSize            int64  `mapstructure:"disk_size"`
-	DiskThinProvisioned bool   `mapstructure:"disk_thin_provisioned"`
+	DiskControllerType string              `mapstructure:"disk_controller_type"`
+	GlobalDiskType     string              `mapstructure:"disk_type"`
+	HTTPIP             string              `mapstructure:"http_ip"`
+	NetworkCard        string              `mapstructure:"network_card"`
+	Network            string              `mapstructure:"network"`
+	Networks           []string            `mapstructure:"networks"`
+	Storage            []driver.DiskConfig `mapstructure:"storage"`
+	USBController      bool                `mapstructure:"usb_controller"`
 
-	Network       string `mapstructure:"network"`
-	NetworkCard   string `mapstructure:"network_card"`
-	USBController bool   `mapstructure:"usb_controller"`
-
-	Notes string `mapstructure:"notes"`
+	Notes              string              `mapstructure:"notes"`
 }
 
 func (c *CreateConfig) Prepare() []error {
 	var errs []error
-
-	if c.DiskSize == 0 {
-		errs = append(errs, fmt.Errorf("'disk_size' is required"))
-	}
 
 	if c.GuestOSType == "" {
 		c.GuestOSType = "otherGuest"
@@ -68,18 +67,18 @@ func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multiste
 
 	ui.Say("Creating VM...")
 	vm, err := d.CreateVM(&driver.CreateConfig{
-		DiskThinProvisioned: s.Config.DiskThinProvisioned,
-		DiskControllerType:  s.Config.DiskControllerType,
-		DiskSize:            s.Config.DiskSize,
-		Name:                s.Location.VMName,
-		Folder:              s.Location.Folder,
 		Cluster:             s.Location.Cluster,
-		Host:                s.Location.Host,
-		ResourcePool:        s.Location.ResourcePool,
 		Datastore:           s.Location.Datastore,
+		Folder:              s.Location.Folder,
+		Host:                s.Location.Host,
+		Name:                s.Location.VMName,
+		ResourcePool:        s.Location.ResourcePool,
+		DiskControllerType:  s.Config.DiskControllerType,
+		GlobalDiskType:      s.Config.GlobalDiskType,
 		GuestOS:             s.Config.GuestOSType,
-		Network:             s.Config.Network,
+		Networks:            s.Config.Networks,
 		NetworkCard:         s.Config.NetworkCard,
+		Storage:             s.Config.Storage,
 		USBController:       s.Config.USBController,
 		Version:             s.Config.Version,
 		Firmware:            s.Config.Firmware,
