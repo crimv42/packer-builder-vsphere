@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	"strings"
-	"time"
 )
 
 type VirtualMachine struct {
@@ -25,6 +26,8 @@ type CloneConfig struct {
 	Datastore    string
 	LinkedClone  bool
 	Annotation   string
+	Networks     []string
+	NetworkCard  string // example: vmxnet3
 }
 
 type HardwareConfig struct {
@@ -54,11 +57,22 @@ type CreateConfig struct {
 	ResourcePool  string
 	Datastore     string
 	GuestOS       string // example: otherGuest
-	Network       string // "" for default network
+	Networks           []string
 	NetworkCard   string // example: vmxnet3
 	USBController bool
+	Storage            []DiskConfig
+	GlobalDiskType     string // example: "thick_eager", "thick_lazy", "thin"
 	Version       uint   // example: 10
 	Firmware      string // efi or bios
+}
+
+type DiskConfig struct {
+	DiskName string  `mapstructure:"disk_name"`
+	DiskSize int64   `mapstructure:"disk_size"`
+	DiskType string  `mapstructure:"disk_type"`
+
+	DiskEagerlyScrub    bool
+	DiskThinProvisioned bool
 }
 
 func (d *Driver) NewVM(ref *types.ManagedObjectReference) *VirtualMachine {
@@ -118,11 +132,17 @@ func (d *Driver) CreateVM(config *CreateConfig) (*VirtualMachine, error) {
 
 	devices := object.VirtualDeviceList{}
 
-	devices, err = addDisk(d, devices, config)
+	devices, err = addIDE(devices)
 	if err != nil {
 		return nil, err
 	}
-	devices, err = addNetwork(d, devices, config)
+
+	devices, err = addDisks(d, devices, config)
+	if err != nil {
+		return nil, err
+	}
+
+	devices, err = addNetworks(d, devices, config)
 	if err != nil {
 		return nil, err
 	}
@@ -207,6 +227,12 @@ func (template *VirtualMachine) Clone(ctx context.Context, config *CloneConfig) 
 	var cloneSpec types.VirtualMachineCloneSpec
 	cloneSpec.Location = relocateSpec
 	cloneSpec.PowerOn = false
+
+  devices := object.VirtualDeviceList{}
+  devices, err = appendNetworks(template, devices, config)
+  if err != nil {
+    return nil, err
+  }
 
 	if config.LinkedClone == true {
 		cloneSpec.Location.DiskMoveType = "createNewChildDiskBacking"
@@ -446,7 +472,7 @@ func (vm *VirtualMachine) GetDir() (string, error) {
 	return "", fmt.Errorf("cannot find '%s'", vmxName)
 }
 
-func addDisk(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+func addDisks(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
 	device, err := devices.CreateSCSIController(config.DiskControllerType)
 	if err != nil {
 		return nil, err
@@ -457,60 +483,94 @@ func addDisk(_ *Driver, devices object.VirtualDeviceList, config *CreateConfig) 
 		return nil, err
 	}
 
-	disk := &types.VirtualDisk{
-		VirtualDevice: types.VirtualDevice{
-			Key: devices.NewKey(),
-			Backing: &types.VirtualDiskFlatVer2BackingInfo{
-				DiskMode:        string(types.VirtualDiskModePersistent),
-				ThinProvisioned: types.NewBool(config.DiskThinProvisioned),
-			},
-		},
-		CapacityInKB: config.DiskSize * 1024,
-	}
+	for _, dc := range config.Storage {
+		if dc.DiskName != "" {
+			dc.DiskName += ".vmdk"
+		}
 
-	devices.AssignController(disk, controller)
-	devices = append(devices, disk)
+		if dc.DiskType == "" && config.GlobalDiskType != "" {
+			dc.DiskType = config.GlobalDiskType
+		}
+
+		if dc.DiskType == "thin" {
+			dc.DiskEagerlyScrub    = false
+			dc.DiskThinProvisioned = true
+		} else if dc.DiskType == "thick_eager" {
+			dc.DiskEagerlyScrub    = true
+			dc.DiskThinProvisioned = false
+		} else if dc.DiskType == "thick_lazy" {
+			dc.DiskEagerlyScrub    = false
+			dc.DiskThinProvisioned = false
+		} else {
+			// default disk type: Thick provisioned lazy zeroed
+			dc.DiskEagerlyScrub    = false
+			dc.DiskThinProvisioned = false
+		}
+
+		disk := &types.VirtualDisk{
+			VirtualDevice: types.VirtualDevice{
+				Key: devices.NewKey(),
+				Backing: &types.VirtualDiskFlatVer2BackingInfo{
+					DiskMode:        string(types.VirtualDiskModePersistent),
+					EagerlyScrub:    types.NewBool(dc.DiskEagerlyScrub),
+					ThinProvisioned: types.NewBool(dc.DiskThinProvisioned),
+				},
+			},
+			CapacityInKB: dc.DiskSize * 1024,
+		}
+
+		devices.AssignController(disk, controller)
+		devices = append(devices, disk)
+	}
 
 	return devices, nil
 }
 
-func addNetwork(d *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
-	var network object.NetworkReference
-	if config.Network == "" {
-		h, err := d.FindHost(config.Host)
+func addNetworks(d *Driver, devices object.VirtualDeviceList, config *CreateConfig) (object.VirtualDeviceList, error) {
+  for _, networkName := range config.Networks {
+		network, err := d.finder.NetworkOrDefault(d.ctx, networkName)
 		if err != nil {
 			return nil, err
 		}
 
-		i, err := h.Info("network")
+		backing, err := network.EthernetCardBackingInfo(d.ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		if len(i.Network) > 1 {
-			return nil, fmt.Errorf("Host has multiple networks. Specify it explicitly")
-		}
-
-		network = object.NewNetwork(d.client.Client, i.Network[0])
-	} else {
-		var err error
-		network, err = d.finder.Network(d.ctx, config.Network)
+		device, err := object.EthernetCardTypes().CreateEthernetCard(config.NetworkCard, backing)
 		if err != nil {
 			return nil, err
 		}
+
+		devices = append(devices, device)
 	}
 
-	backing, err := network.EthernetCardBackingInfo(d.ctx)
-	if err != nil {
-		return nil, err
+	return devices, nil
+}
+
+func appendNetworks(template *VirtualMachine, devices object.VirtualDeviceList, config *CloneConfig) (object.VirtualDeviceList, error) {
+  for _, networkName := range config.Networks {
+		network, err := template.driver.finder.NetworkOrDefault(template.driver.ctx, networkName)
+		if err != nil {
+			return nil, err
+		}
+
+		//backing, err := network.EthernetCardBackingInfo(d.ctx)
+		backing, err := network.EthernetCardBackingInfo(template.driver.ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		device, err := object.EthernetCardTypes().CreateEthernetCard(config.NetworkCard, backing)
+		if err != nil {
+			return nil, err
+		}
+
+		devices = append(devices, device)
 	}
 
-	device, err := object.EthernetCardTypes().CreateEthernetCard(config.NetworkCard, backing)
-	if err != nil {
-		return nil, err
-	}
-
-	return append(devices, device), nil
+	return devices, nil
 }
 
 func addIDE(devices object.VirtualDeviceList) (object.VirtualDeviceList, error) {
